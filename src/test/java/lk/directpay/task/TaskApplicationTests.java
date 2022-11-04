@@ -1,10 +1,10 @@
-package lk.directpay.task01;
+package lk.directpay.task;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class Task01ApplicationTests {
+class TaskApplicationTests {
 
 	@Test
 	void contextLoads() {

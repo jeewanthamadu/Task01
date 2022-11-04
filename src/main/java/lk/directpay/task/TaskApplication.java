@@ -1,13 +1,13 @@
-package lk.directpay.task01;
+package lk.directpay.task;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Task01Application {
+public class TaskApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Task01Application.class, args);
+		SpringApplication.run(TaskApplication.class, args);
 	}
 
 }
