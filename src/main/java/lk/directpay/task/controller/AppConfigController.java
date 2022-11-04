@@ -20,7 +20,6 @@ public class AppConfigController {
     @Autowired
     public AppConfigController(AppConfigService appConfigService) {
         this.appConfigService = appConfigService;
-
     }
 
    @PostMapping("/config/check/update")

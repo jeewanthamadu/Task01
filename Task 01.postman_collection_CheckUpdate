@@ -1,0 +1,42 @@
+{
+	"info": {
+		"_postman_id": "2277639b-35d7-4a25-a37f-0e1fd58276a2",
+		"name": "Task 01",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18073671"
+	},
+	"item": [
+		{
+			"name": "checkUpdate",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"device\":{\r\n        \"platform\":\"Android\",\r\n        \"app_version\":\"1\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/app/config/check/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"app",
+						"config",
+						"check",
+						"update"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
