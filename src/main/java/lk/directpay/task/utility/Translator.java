@@ -7,15 +7,17 @@ import java.util.Locale;
 
 @Component
 public class Translator {
-    @Autowired
+
     private static ResourceBundleMessageSource messageSource;
 
-    /*Translator(ResourceBundleMessageSource messageSource) {
+    @Autowired
+   Translator(ResourceBundleMessageSource messageSource) {
         Translator.messageSource = messageSource;
-    }*/
+    }
 
     public static String toLocale(String msg) {
         Locale locale = LocaleContextHolder.getLocale();
         return messageSource.getMessage(msg, null, locale);
     }
+
 }

@@ -25,4 +25,5 @@ public class AppConfig {
     private String appUrl;
     private String splashScreen;
     private String authScreen;
+
 }
