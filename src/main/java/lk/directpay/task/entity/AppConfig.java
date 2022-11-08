@@ -13,6 +13,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@ToString
 @Entity
 public class AppConfig {
     @Id
