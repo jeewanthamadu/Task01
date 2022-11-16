@@ -152,7 +152,26 @@ public class userController {
 
 
     public @PostMapping(path = "/register")
-    DefaultResponse register(@RequestBody HashMap<String, Object> payload) {
+    DefaultResponse register(Register register) {
+
+        HashMap<String, Object> deviceDetails = new HashMap<>();
+        deviceDetails.put("platform",register.getDevice().getPlatform());
+        deviceDetails.put("app_version",register.getDevice().getAppVersion());
+        deviceDetails.put("device_id",register.getDevice().getDeviceId());
+
+        HashMap<String, Object> payload = new HashMap<>();
+        payload.put("firstname",register.getFirstname());
+        payload.put("lastname",register.getLastname());
+        payload.put("nic",register.getNic());
+        payload.put("email",register.getEmail());
+        payload.put("mobile",register.getMobile());
+        payload.put("password",register.getPassword());
+        payload.put("countryId",register.getCountryId());
+        payload.put("status",register.getStatus());
+        payload.put("username",register.getUsername());
+        payload.put("device",deviceDetails);
+
+
         try {
             // validations
             String validationMessage = validations.required(payload, "password", "firstname", "lastname", "mobile",
