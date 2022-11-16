@@ -26,6 +26,13 @@ dependencies {
 	implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+	implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+	implementation group: 'org.json', name: 'json', version: '20220924'
+	implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.66'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+
+
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -35,3 +42,5 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+

@@ -105,7 +105,46 @@ public class DeviceRegistrationService {
 
     }
 
-
+    public DefaultResponse verifyDevice(HashMap<String, Object> payload) {
+        String email = payload.get("email").toString();
+        String mobile = payload.get("mobile").toString();
+        String otp = payload.get("otp").toString();
+        OtpVerification device;
+        List<OtpVerification> otpVerificationList = otpVerificationRepository.findOtpVerificationByMobile(mobile);
+        if (!otpVerificationList.isEmpty()) {
+            device = otpVerificationList.get(0);
+            if (device.getOtpAttempts() < 2) {
+                if (device.getOtp().equals(otp)) {
+                    device.setMobileVerified(VerificationStatus.VERIFIED.name());
+                    device.setOtpAttempts(device.getOtpAttempts() + 1);
+                    otpVerificationRepository.save(device);
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("email", email);
+                    data.put("mobile", mobile);
+                    return new DefaultResponse(200, "Success", "Verification Successful", data);
+                } else {
+                    device.setOtpAttempts(device.getOtpAttempts() + 1);
+                    otpVerificationRepository.save(device);
+                    int remainingAttempts = 3 - device.getOtpAttempts();
+                    LOGGER.log(Level.WARNING, "Entered OTP is incorrect " + remainingAttempts + " attempts left..!");
+                    return new DefaultResponse(400, Translator.toLocale("verification_failed"),
+                            Translator.toLocale("retype_otp") + " " + remainingAttempts + " "
+                                    + Translator.toLocale("attempts_left"),
+                            payload);
+                }
+            } else {
+                device.setOtpAttempts(device.getOtpAttempts() + 1);
+                device.setMobileVerified(VerificationStatus.EXCEEDED.name());
+                otpVerificationRepository.save(device);
+                LOGGER.log(Level.SEVERE, "User OTP attempts are over");
+                return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("3_attempts_over"),
+                        payload);
+            }
+        } else {
+            return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("try_to_resend_otp"),
+                    payload);
+        }
+    }
 
     public String createOTP() {
         Collections.shuffle(digits);

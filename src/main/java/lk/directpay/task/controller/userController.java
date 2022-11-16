@@ -1,24 +1,26 @@
 package lk.directpay.task.controller;
 
 
-import lk.directpay.task.entity.AppUser;
-import lk.directpay.task.model.DefaultResponse;
-import lk.directpay.task.model.NicVerificationRequest;
-import lk.directpay.task.model.OtpVerify;
-import lk.directpay.task.model.ValidateRegister;
-import lk.directpay.task.repository.UserRepository;
+import lk.directpay.task.entity.*;
+import lk.directpay.task.model.*;
+import lk.directpay.task.repository.*;
+import lk.directpay.task.services.AuthUserDetailsService;
 import lk.directpay.task.services.DeviceRegistrationService;
+import lk.directpay.task.utility.AppConstants;
+import lk.directpay.task.utility.JWTUtility;
+import lk.directpay.task.utility.Translator;
+import lk.directpay.task.utility.ValidationUtility;
 import org.springframework.beans.factory.annotation.Autowired;
-/*import org.springframework.util.StringUtils;*/
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.StringUtils;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -31,7 +33,38 @@ public class userController {
     UserRepository userRepository;
 
     @Autowired
+    ValidationUtility validations;
+
+    @Autowired
+    OtpVerificationRepository otpVerificationRepository;
+
+    @Autowired
+    CountryRepository countryRepository;
+
+    @Autowired
+    AuthUserDetailsService userDetailsService;
+
+    @Autowired
+    JWTUtility jwtUtility;
+
+    @Autowired
+    ParameterRepository parameterRepository;
+
+    @Autowired
+    BillerFeeRepository billerFeeRepository;
+
+
+
+
+    @Autowired
     DeviceRegistrationService deviceRegistrationService;
+
+
+    @Value("${transaction.limit}")
+    private String transactionLimit;
+
+    @Value("${auth.transaction.limit}")
+    private String authTransactionLimit;
 
     private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final String NAME_PATTERN_REGEX = "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$";
@@ -112,6 +145,212 @@ public class userController {
         }
     }
 
+    public @PostMapping(path = "/register/verify")
+    DefaultResponse verify( @RequestBody HashMap<String, Object> payload) {
+        return deviceRegistrationService.verifyDevice(payload);
+    }
+
+
+    public @PostMapping(path = "/register")
+    DefaultResponse register(@RequestBody HashMap<String, Object> payload) {
+        try {
+            // validations
+            String validationMessage = validations.required(payload, "password", "firstname", "lastname", "mobile",
+                    "email", "nic"/*, "nic_front", "nic_back"*/);
+
+            if (validationMessage != null) {
+                LOGGER.log(Level.SEVERE, "Validation Errors : " + validationMessage);
+                return new DefaultResponse(400, "Failed", validationMessage);
+            }
+
+            // credentials
+            final String username = UUID.randomUUID().toString();
+            String password =
+          /*  crypto.decrypt(*/
+            payload.get("password").toString();
+
+            if (password == null) {
+                LOGGER.log(Level.SEVERE, "login failed. decrypt error");
+                return new DefaultResponse(400, "Failed", "");
+            }
+
+            // personal info
+            final String firstname = payload.get("firsltname").toString().trim();
+            final String lastname = payload.get("lastname").toString().trim();
+            final int country = payload.containsKey("country") ? (int) payload.get("country") : 1;
+            final String mobile = payload.get("mobile").toString().trim();
+            final String email = payload.get("email").toString().trim();
+            final String nic = payload.get("nic").toString().toUpperCase().trim();
+            /*final String nicFront = payload.get("nic_front").toString();
+            final String nicBack = payload.get("nic_back").toString();*/
+
+            // meta data
+            HashMap<String, Object> device = (HashMap<String, Object>) payload.get("device");
+            final String deviceId = device.get("device_id").toString();
+            final String appVersion = device.get("app_version").toString();
+
+            final List<AppUser> usersByEmail = userRepository.findByEmail(email);
+            if (usersByEmail.size() > 0) {
+                LOGGER.log(Level.WARNING, "User with this email already exists!");
+                return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("user_exists_with_email"));
+            }
+
+            final List<AppUser> usersByMobile = userRepository.findByPhoneNumber(mobile);
+            if (usersByMobile.size() > 0) {
+                LOGGER.log(Level.WARNING, "User with this mobile already exists!");
+                return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("user_exists_with_mobile"));
+            }
+
+            // Validate NIC
+            boolean isValidatedNIC = validateNIC(nic);
+            if (!isValidatedNIC){
+                LOGGER.log(Level.SEVERE, "User with this NIC already exists!");
+                return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("user_exists_with_nic"));
+            }
+
+            final Optional<Country> countryOptional = countryRepository.findById(country);
+            if (countryOptional.isEmpty()) {
+                LOGGER.log(Level.WARNING, "Invalid country selected!");
+                return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("invalid_country"));
+            }
+
+            AppUser appUser = new AppUser();
+
+            appUser.setFirstname(firstname);
+            appUser.setLastname(lastname);
+            appUser.setUsername(username);
+            appUser.setEmail(email);
+            appUser.setPassword(password);
+            appUser.setCountryId(country);
+            appUser.setPhoneNumber(mobile);
+            appUser.setNic(nic.toUpperCase());
+            /*appUser.setNicFront(nicFront);
+            appUser.setNicBack(nicBack);*/
+            appUser.setStatus(1);
+
+
+            if (payload.containsKey("fcm_token") && !payload.get("fcm_token").equals("")) {
+                appUser.setFcmToken(payload.get("fcm_token").toString());
+            }
+
+            // save metadata
+            appUser.setDeviceId(deviceId);
+            appUser.setAppVersion(appVersion);
+
+            ArrayList<String> roles = new ArrayList<>();
+            roles.add("user");
+            appUser.setRoles(roles);
+
+            List<OtpVerification> otpVerificationList = otpVerificationRepository
+                    .findOtpVerificationByMobile(appUser.getPhoneNumber());
+            if (!otpVerificationList.isEmpty()) {
+                final OtpVerification otpVerification = otpVerificationList.get(0);
+                if (otpVerification.getMobileVerified().equals(VerificationStatus.VERIFIED.name())) {
+                    userRepository.save(appUser);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(appUser.getUsername());
+                    String token = jwtUtility.generateToken(userDetails);
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    data.put("user", createUserResponseObject(appUser));
+                    data.put("token", token);
+
+                    //fees
+                    data.put("fund_transfer", getFundTransferFees());
+                    data.put("credit_card_payment", getCreditCardPaymentFees());
+                    data.put("biller_fees", this.getBillerFees());
+
+                    Map<String, Object> msgObject = new HashMap<>();
+                    msgObject.put("number", appUser.getPhoneNumber());
+                    msgObject.put("message",
+                            "Hi " + appUser.getFirstname() + ", You have Successfully Signed up for NSB Pay.");
+                    /*commonSmsService.sendMessage(msgObject);
+
+                    final boolean isForeign = !appUser.getPhoneNumber().startsWith("94");
+                    if (isForeign) {
+                        String subject = "NSBPAY - WELCOME....!";
+                        sendEmail(appUser.getEmail(), subject, "Hi " + appUser.getFirstname() + ", You have Successfully Signed up for NSB Pay.");
+                    }*/
+
+                    return new DefaultResponse(200, Translator.toLocale("success"), Translator.toLocale("user_registered"), data);
+                } else {
+                    return new DefaultResponse(400, Translator.toLocale("failed"), Translator.toLocale("device_verification_failed"),
+                            payload);
+                }
+            } else {
+                return new DefaultResponse(400, Translator.toLocale("failed"),
+                        Translator.toLocale("user_not_verified"), payload);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new DefaultResponse().setMessage("Please try again. If the problem persists please contact customer support");
+    }
+
+
+    public UserResponse createUserResponseObject(AppUser user) {
+        UserResponse userResponse = new UserResponse();
+        userResponse.setUsername(user.getUsername());
+        userResponse.setFirstname(user.getFirstname());
+        userResponse.setLastname(user.getLastname());
+        userResponse.setPhoneNumber(user.getPhoneNumber());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setNic(user.getNic());
+        userResponse.setDeviceId(user.getDeviceId());
+        userResponse.setTransactionAuthLimit(authTransactionLimit);
+        userResponse.setMaxTransactionLimit(transactionLimit);
+        userResponse.setDefaultTill(user.getDefaultTillId());
+        return userResponse;
+    }
+
+    private Map<String, Object> getFundTransferFees() {
+
+        Map<String, Object> fees = new HashMap<>();
+
+        Parameter commissionValue1 = parameterRepository.findParameterByName(AppConstants.NSB_TO_NSB_COMMISSION);
+        double commission1 = Double.parseDouble(commissionValue1.getValue());
+        fees.put(AppConstants.NSB_TO_NSB_COMMISSION.toLowerCase(), commission1);
+
+        Parameter commissionValue2 = parameterRepository.findParameterByName(AppConstants.NSB_TO_OTHER_COMMISSION);
+        double commission2 = Double.parseDouble(commissionValue2.getValue());
+        fees.put(AppConstants.NSB_TO_OTHER_COMMISSION.toLowerCase(), commission2);
+
+        Parameter commissionValue3 = parameterRepository.findParameterByName(AppConstants.OTHER_TO_NSB_COMMISSION);
+        double commission3 = Double.parseDouble(commissionValue3.getValue());
+        fees.put(AppConstants.OTHER_TO_NSB_COMMISSION.toLowerCase(), commission3);
+
+        Parameter commissionValue4 = parameterRepository.findParameterByName(AppConstants.OTHER_TO_OTHER_COMMISSION);
+        double commission4 = Double.parseDouble(commissionValue4.getValue());
+        fees.put(AppConstants.OTHER_TO_OTHER_COMMISSION.toLowerCase(), commission4);
+
+        fees.put("bank_code", AppConstants.NSB_BANK_CODE);
+
+        return fees;
+    }
+
+    private Map<String, Object> getCreditCardPaymentFees() {
+
+        Map<String, Object> fees = new HashMap<>();
+
+        Parameter commissionValue1 = parameterRepository.findParameterByName(AppConstants.CREDIT_CARD_PAYMENT_FROM_NSB_COMMISSION);
+        double commission1 = Double.parseDouble(commissionValue1.getValue());
+        fees.put(AppConstants.CREDIT_CARD_PAYMENT_FROM_NSB_COMMISSION.toLowerCase(), commission1);
+
+        Parameter commissionValue2 = parameterRepository.findParameterByName(AppConstants.CREDIT_CARD_PAYMENT_FROM_OTHER_COMMISSION);
+        double commission2 = Double.parseDouble(commissionValue2.getValue());
+        fees.put(AppConstants.CREDIT_CARD_PAYMENT_FROM_OTHER_COMMISSION.toLowerCase(), commission2);
+
+        fees.put("bank_code", AppConstants.NSB_BANK_CODE);
+
+        return fees;
+    }
+
+    private HashMap<String, Object> getBillerFees() {
+        List<BillerFee> billerFeeList = billerFeeRepository.findAll();
+        HashMap<String, Object> billerFees = new HashMap<>();
+        for (BillerFee billerFee : billerFeeList) {
+            billerFees.put(billerFee.getBillerId(), billerFee.getFee());
+        }
+        return billerFees;
+    }
 
     private boolean validateNIC(String nic){
         if (nic.length() == 12){
