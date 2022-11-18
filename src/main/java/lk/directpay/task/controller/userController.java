@@ -65,11 +65,11 @@ public class userController {
 
 
     private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private final String NAME_PATTERN_REGEX = "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$";
-    private final String NIC_PATTERN_REGEX = "^([0-9]{9}[x|X|v|V]|[0-9]{12})$";
+    /*private final String NAME_PATTERN_REGEX = "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$";
+    private final String NIC_PATTERN_REGEX = "^([0-9]{9}[x|X|v|V]|[0-9]{12})$";*/
 
     public @PostMapping(path = "/register/otp")
-    DefaultResponse registerOtp(@RequestBody OtpVerify otpVerify) {
+    DefaultResponse registerOtp(@RequestBody @Valid OtpVerify otpVerify) {
         return deviceRegistrationService.registerDevice(otpVerify);
     }
 
@@ -79,7 +79,7 @@ public class userController {
         String mobile = nicVerificationRequest.getMobile();
         String nic = nicVerificationRequest.getNic();
 
-        if (StringUtils.isEmpty(username) && StringUtils.isEmpty(mobile)){
+       /* if (StringUtils.isEmpty(username) && StringUtils.isEmpty(mobile)){
             return DefaultResponse.error("Failed", "Cannot find user without user id or mobile");
         }
         if (StringUtils.isEmpty(nic)){
@@ -87,7 +87,7 @@ public class userController {
         }
         if (!Pattern.matches(NIC_PATTERN_REGEX, nic)){
             return DefaultResponse.error("Failed", "Invalid NIC format");
-        }
+        }*/
         AppUser appUser = null;
         if (!StringUtils.isEmpty(username)){
             appUser = userRepository.findOneByUsername(username);
@@ -108,14 +108,14 @@ public class userController {
     }
 
     public @PostMapping(path = "/register/validate")
-    DefaultResponse validate(@RequestBody ValidateRegister validateRegister) {
+    DefaultResponse validate(@RequestBody @Valid ValidateRegister validateRegister) {
         HashMap<String, Object> validations = new HashMap();
 
         final String firstname =validateRegister.getFirstname();
         final String lastname =validateRegister.getLastname();
         final String nic =validateRegister.getNic();
 
-        if (!Pattern.matches(NAME_PATTERN_REGEX, firstname)) {
+        /*if (!Pattern.matches(NAME_PATTERN_REGEX, firstname)) {
             validations.put("firstname", "Invalid characters in First Name!");
         }
 
@@ -125,7 +125,7 @@ public class userController {
 
         if (!Pattern.matches(NIC_PATTERN_REGEX, nic)) {
             validations.put("nic", "Invalid NIC format!");
-        }
+        }*/
 
         boolean isValidatedNIC = validateNIC(nic);
         if (!isValidatedNIC){
