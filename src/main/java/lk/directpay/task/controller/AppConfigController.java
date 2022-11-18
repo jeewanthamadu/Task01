@@ -2,6 +2,7 @@ package lk.directpay.task.controller;
 
 
 import lk.directpay.task.model.DefaultResponse;
+import lk.directpay.task.model.Device;
 import lk.directpay.task.services.AppConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,8 +24,8 @@ public class AppConfigController {
     }
 
    @PostMapping("/config/check/update")
-    public DefaultResponse checkAppUpdates(@RequestBody HashMap<String, Object> payload) {
-       return appConfigService.checkForDeviceUpdates(payload);
+    public DefaultResponse checkAppUpdates(@RequestBody Device Device) {
+       return appConfigService.checkForDeviceUpdates(Device);
     }
 
 

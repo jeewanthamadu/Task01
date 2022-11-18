@@ -4,6 +4,7 @@ import lk.directpay.task.entity.AppConfig;
 import lk.directpay.task.entity.Country;
 import lk.directpay.task.model.AppConfigResponse;
 import lk.directpay.task.model.DefaultResponse;
+import lk.directpay.task.model.Device;
 import lk.directpay.task.repository.AppConfigRepository;
 import lk.directpay.task.repository.CountryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,12 @@ public class AppConfigService {
         this.countryRepository = countryRepository;
      }
 
-    public DefaultResponse checkForDeviceUpdates(HashMap<String, Object> payload) {
-        HashMap<String, Object> deviceData = (HashMap<String, Object>) payload.get("device");
-        String platform = deviceData.get("platform").toString();
+    public DefaultResponse checkForDeviceUpdates(Device deviceData) {
+        /*HashMap<String, Object> deviceData = (HashMap<String, Object>) payload.get("device");*/
+        String platform = deviceData.getPlatform();
         AppConfig appConfig = appConfigRepository.findAppConfigByPlatformIgnoreCase(platform);
         if (appConfig != null) {
-            double deviceVersion = Double.parseDouble(deviceData.get("app_version").toString());
+            double deviceVersion = Double.parseDouble(deviceData.getAppVersion());
             double minAppVersion = Double.parseDouble(appConfig.getMinVersion());
             double latestAppVersion = Double.parseDouble(appConfig.getLatestVersion());
             Map<String, Object> data;
