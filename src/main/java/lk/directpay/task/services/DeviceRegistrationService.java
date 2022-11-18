@@ -32,8 +32,6 @@ public class DeviceRegistrationService {
     private final UserRepository userRepository;
 
 
-
-
     @Autowired
     public DeviceRegistrationService(OtpVerificationRepository otpVerificationRepository, UserRepository userRepository) {
         this.otpVerificationRepository = otpVerificationRepository;

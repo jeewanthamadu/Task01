@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,18 +54,15 @@ public class userController {
     @Autowired
     BillerFeeRepository billerFeeRepository;
 
-
-
-
     @Autowired
     DeviceRegistrationService deviceRegistrationService;
-
 
     @Value("${transaction.limit}")
     private String transactionLimit;
 
     @Value("${auth.transaction.limit}")
     private String authTransactionLimit;
+
 
     private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final String NAME_PATTERN_REGEX = "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$";
@@ -76,7 +74,7 @@ public class userController {
     }
 
     @PostMapping(path = "/nic/verify")
-    public DefaultResponse verifyUserNic(@RequestBody NicVerificationRequest nicVerificationRequest) {
+    public DefaultResponse verifyUserNic(@RequestBody @Valid NicVerificationRequest nicVerificationRequest) {
         String username = nicVerificationRequest.getUserId();
         String mobile = nicVerificationRequest.getMobile();
         String nic = nicVerificationRequest.getNic();
@@ -149,7 +147,6 @@ public class userController {
     DefaultResponse verify( @RequestBody HashMap<String, Object> payload) {
         return deviceRegistrationService.verifyDevice(payload);
     }
-
 
     public @PostMapping(path = "/register")
     DefaultResponse register(Register register) {
@@ -304,7 +301,6 @@ public class userController {
         return new DefaultResponse().setMessage("Please try again. If the problem persists please contact customer support");
     }
 
-
     public UserResponse createUserResponseObject(AppUser user) {
         UserResponse userResponse = new UserResponse();
         userResponse.setUsername(user.getUsername());
@@ -411,7 +407,6 @@ public class userController {
         }
         return false;
     }
-
 
     private String getFormattedNIC(String nic) {
         if (nic.length() == 12) {
