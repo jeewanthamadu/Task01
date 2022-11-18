@@ -4,12 +4,14 @@ package lk.directpay.task.services;
 import lk.directpay.task.entity.OtpVerification;
 import lk.directpay.task.entity.VerificationStatus;
 import lk.directpay.task.model.DefaultResponse;
+import lk.directpay.task.model.OtpRegister;
+
 import lk.directpay.task.model.OtpVerify;
 import lk.directpay.task.repository.OtpVerificationRepository;
 import lk.directpay.task.repository.UserRepository;
 import lk.directpay.task.utility.Translator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -39,9 +41,9 @@ public class DeviceRegistrationService {
 
     }
 
-    public DefaultResponse registerDevice( OtpVerify otpVerify ) {
-        String email = otpVerify.getEmail();
-        String mobile = otpVerify.getMobile();
+    public DefaultResponse registerDevice( OtpRegister otpRegister ) {
+        String email = otpRegister.getEmail();
+        String mobile = otpRegister.getMobile();
         String phn = mobile.substring(0, 4);
         HashMap<String,Object> payload = new HashMap<>();
         payload.put("email",email);
@@ -103,10 +105,16 @@ public class DeviceRegistrationService {
 
     }
 
-    public DefaultResponse verifyDevice(HashMap<String, Object> payload) {
-        String email = payload.get("email").toString();
-        String mobile = payload.get("mobile").toString();
-        String otp = payload.get("otp").toString();
+    public DefaultResponse verifyDevice(OtpVerify otpVerify) {
+        String email = otpVerify.getEmail();
+        String mobile = otpVerify.getMobile();
+        String otp = otpVerify.getOtp();
+
+        HashMap<String, Object> payload = new HashMap<>();
+        payload.put("email",email);
+        payload.put("mobile",mobile);
+        payload.put("otp",otp);
+
         OtpVerification device;
         List<OtpVerification> otpVerificationList = otpVerificationRepository.findOtpVerificationByMobile(mobile);
         if (!otpVerificationList.isEmpty()) {

@@ -69,8 +69,8 @@ public class userController {
     private final String NIC_PATTERN_REGEX = "^([0-9]{9}[x|X|v|V]|[0-9]{12})$";*/
 
     public @PostMapping(path = "/register/otp")
-    DefaultResponse registerOtp(@RequestBody @Valid OtpVerify otpVerify) {
-        return deviceRegistrationService.registerDevice(otpVerify);
+    DefaultResponse registerOtp(@RequestBody @Valid OtpRegister otpRegister) {
+        return deviceRegistrationService.registerDevice(otpRegister);
     }
 
     @PostMapping(path = "/nic/verify")
@@ -144,17 +144,18 @@ public class userController {
     }
 
     public @PostMapping(path = "/register/verify")
-    DefaultResponse verify( @RequestBody HashMap<String, Object> payload) {
-        return deviceRegistrationService.verifyDevice(payload);
+    DefaultResponse verify( @RequestBody @Valid OtpVerify otpVerify) {
+        return deviceRegistrationService.verifyDevice(otpVerify);
     }
 
     public @PostMapping(path = "/register")
-    DefaultResponse register(Register register) {
+    DefaultResponse register(@RequestBody @Valid Register register) {
 
         HashMap<String, Object> deviceDetails = new HashMap<>();
         deviceDetails.put("platform",register.getDevice().getPlatform());
         deviceDetails.put("app_version",register.getDevice().getAppVersion());
         deviceDetails.put("device_id",register.getDevice().getDeviceId());
+
 
         HashMap<String, Object> payload = new HashMap<>();
         payload.put("firstname",register.getFirstname());
@@ -170,14 +171,14 @@ public class userController {
 
 
         try {
-            // validations
+            /*// validations
             String validationMessage = validations.required(payload, "password", "firstname", "lastname", "mobile",
-                    "email", "nic"/*, "nic_front", "nic_back"*/);
+                    "email", "nic"*//*, "nic_front", "nic_back"*//*);
 
             if (validationMessage != null) {
                 LOGGER.log(Level.SEVERE, "Validation Errors : " + validationMessage);
                 return new DefaultResponse(400, "Failed", validationMessage);
-            }
+            }*/
 
             // credentials
             final String username = UUID.randomUUID().toString();
@@ -185,13 +186,13 @@ public class userController {
           /*  crypto.decrypt(*/
             payload.get("password").toString();
 
-            if (password == null) {
+            /*if (password == null) {
                 LOGGER.log(Level.SEVERE, "login failed. decrypt error");
                 return new DefaultResponse(400, "Failed", "");
-            }
+            }*/
 
             // personal info
-            final String firstname = payload.get("firsltname").toString().trim();
+            final String firstname = payload.get("firstname").toString().trim();
             final String lastname = payload.get("lastname").toString().trim();
             final int country = payload.containsKey("country") ? (int) payload.get("country") : 1;
             final String mobile = payload.get("mobile").toString().trim();

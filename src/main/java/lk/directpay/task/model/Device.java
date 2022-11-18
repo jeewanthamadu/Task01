@@ -3,27 +3,25 @@ package lk.directpay.task.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import javax.validation.constraints.*;
+
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Device {
 
+        @NotNull(message = "Platform must not be a null")
         private String platform;
+
         @JsonProperty("device_id")
+        @NotEmpty(message = "DeviceId must not be a null")
         private String deviceId;
+
         @JsonProperty("app_version")
+        @NotEmpty(message = "AppVersion must not be a null")
         private String appVersion;
 
-        public Device(String platform, String deviceId, String appVersion) {
-            this.platform = platform;
-            this.deviceId = deviceId;
-            this.appVersion = appVersion;
-        }
-
-        public Device(String platform, String appVersion) {
-            this.platform = platform;
-            this.appVersion = appVersion;
-        }
 
     }
 

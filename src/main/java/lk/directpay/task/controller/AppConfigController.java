@@ -1,6 +1,7 @@
 package lk.directpay.task.controller;
 
 
+import lk.directpay.task.model.CheckUpdateDevice;
 import lk.directpay.task.model.DefaultResponse;
 import lk.directpay.task.model.Device;
 import lk.directpay.task.services.AppConfigService;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.HashMap;
 
 @RestController
@@ -24,7 +26,7 @@ public class AppConfigController {
     }
 
    @PostMapping("/config/check/update")
-    public DefaultResponse checkAppUpdates(@RequestBody Device Device) {
+    public DefaultResponse checkAppUpdates(@RequestBody @Valid CheckUpdateDevice Device) {
        return appConfigService.checkForDeviceUpdates(Device);
     }
 

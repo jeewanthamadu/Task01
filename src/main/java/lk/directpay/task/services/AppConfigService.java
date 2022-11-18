@@ -3,6 +3,7 @@ package lk.directpay.task.services;
 import lk.directpay.task.entity.AppConfig;
 import lk.directpay.task.entity.Country;
 import lk.directpay.task.model.AppConfigResponse;
+import lk.directpay.task.model.CheckUpdateDevice;
 import lk.directpay.task.model.DefaultResponse;
 import lk.directpay.task.model.Device;
 import lk.directpay.task.repository.AppConfigRepository;
@@ -33,7 +34,7 @@ public class AppConfigService {
         this.countryRepository = countryRepository;
      }
 
-    public DefaultResponse checkForDeviceUpdates(Device deviceData) {
+    public DefaultResponse checkForDeviceUpdates(CheckUpdateDevice deviceData) {
         /*HashMap<String, Object> deviceData = (HashMap<String, Object>) payload.get("device");*/
         String platform = deviceData.getPlatform();
         AppConfig appConfig = appConfigRepository.findAppConfigByPlatformIgnoreCase(platform);
