@@ -16,6 +16,7 @@ import javax.validation.constraints.Pattern;
 public class OtpRegister {
 
     @NotEmpty(message = "email must not be a null")
+    @Pattern(regexp = "^(.+)@(.+)$",message = "Invalid Email...")
     private String email;
 
     @Pattern(regexp = "^[0-9]*$",message = "mobile Number Is InCorrect")
