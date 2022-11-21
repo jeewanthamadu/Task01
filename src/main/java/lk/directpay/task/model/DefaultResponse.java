@@ -31,7 +31,6 @@ public class DefaultResponse {
 
     public static DefaultResponse success(String title, String message, Map<String, Object> data) {
         return new DefaultResponse(200, title, message, data);
-
     }
 
     public static DefaultResponse array(String arrayName, Object array) {

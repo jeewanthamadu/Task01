@@ -171,6 +171,7 @@ public class userController {
 
 
         try {
+
             /*// validations
             String validationMessage = validations.required(payload, "password", "firstname", "lastname", "mobile",
                     "email", "nic"*//*, "nic_front", "nic_back"*//*);

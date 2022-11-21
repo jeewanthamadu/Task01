@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
+
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -48,7 +48,7 @@ public class Register {
         @NotEmpty(message = "username must not be a null")
         private String username;
 
-        /*@NotEmpty(message = "device must not be a null")*/
+        @NotEmpty(message = "device must not be a null")
         @Valid
         private Device device;
 
